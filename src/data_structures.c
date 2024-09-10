@@ -212,12 +212,16 @@ LabelNode *get_next_node(LabelNode *node) {
 
 LabelNode *is_label_name_exists(char *label_name, LabelTable *label_table) {
     int result;
+    char *label_name_copy;
     LabelNode *temp = label_table->head;
     if (label_name == NULL) {
         return NULL;
     }
-    char *label_name_copy = malloc(strlen(label_name) + 1);
+    label_name_copy = malloc(strlen(label_name) + 1);
 
+    if (label_name_copy == NULL) {
+        exit(EXIT_FAILURE);
+    }
     /*Make copy of input string and remove \n and whitespaces */
     strcpy(label_name_copy, label_name);
     remove_spaces(label_name_copy);

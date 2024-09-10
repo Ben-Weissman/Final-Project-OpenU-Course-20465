@@ -1,5 +1,5 @@
 assembler : assembler.o data_structures.o error_handling.o first_pass.o machine_code.o parser.o preprocessor.o second_pass.o utilities.o
-		gcc -std=c90 -ansi -Wall -pedantic misc_Functions.o assembler.o set.o -o assembler
+		gcc -std=c90 -ansi -Wall -pedantic assembler.o data_structures.o error_handling.o first_pass.o machine_code.o parser.o preprocessor.o second_pass.o utilities.o -o assembler
 assembler.o : assembler.c
 		gcc -c -ansi -std=c90 -Wall -pedantic assembler.c -o assembler.o
 data_structures.o : data_structures.c

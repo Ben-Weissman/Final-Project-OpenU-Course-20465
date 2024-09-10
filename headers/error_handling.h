@@ -37,9 +37,9 @@ enum ErrorValues {
     NOT_ALL_ENTRIES_FOUND,
 
     /* Used for pre-processor (macro's) */
-    EXTRA_TEXT_AT_START_OF_MACRO,
     MACRO_NAME_IS_CMD_NAME,
     MACRO_NAME_IS_INSTRUCTION_NAME,
+    EXTRA_TEXT_AT_START_OF_MACRO
 };
 
 typedef struct ErrorTable ErrorTable;

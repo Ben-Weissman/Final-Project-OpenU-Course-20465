@@ -35,4 +35,5 @@ int main(int argc, char *argv[]) {
         free(src_file);
         printf("End of proccess for file named:  %s\n",argv[i]);
     }
+    return 0;
 }

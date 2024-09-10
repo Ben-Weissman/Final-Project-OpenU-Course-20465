@@ -37,11 +37,11 @@ ErrorTable error_table[] = {
     {LABEL_NAME_EXISTS, "Label name already exists"},
 
     {NOT_ALL_ENTRIES_FOUND, "One or more of stated .entry labels were not defined in this file"},
-    {NOT_ALL_ENTRIES_FOUND, "One or more of stated .entry labels were not defined in this file"},
+{MACRO_NAME_IS_CMD_NAME, "Macro name canno't be an OP command (like cmp, mov, lea..)"},
+{MACRO_NAME_IS_INSTRUCTION_NAME, "Macro name canno't be an instruction action (like .string/.data)"}
 
 
 };
-
 
 void handle_error(int *error_code, int line_number) {
     if (line_number != NIL) {
