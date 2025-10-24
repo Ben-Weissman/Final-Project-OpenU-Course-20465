@@ -6,29 +6,29 @@
 #include "data_structures.h"
 
 
-void pre_proccesor(char *input_file_name, MacroList *macro_list, int *error_code);
+void run_preprocessor(char *input_file_name, MacroList *macro_list, int *error_code);
 
-/** @brief Checks if the line is a start of macro defnition
+/** @brief Checks if the line is a start of macro definition
  *
- * This function test's if the given input string is a start of macro definition.
+ * This function tests if the given input string is a start of macro definition.
  * The given macro flag is updated accordingly.
  * Also if it is a macro definition then the given name_of_macro will hold the macro's name.
  *
- * @param name_of_macro If it is macro defnition then the name will be stored here.
+ * @param name_of_macro If it is macro definition then the name will be stored here.
  * @param input_string The line of text to check
  * @param macro_flag The result of the function will be stored here.
  */
 void is_line_start_of_macro_definition(char *name_of_macro, char *input_string, int *macro_flag);
 
-/** @brief Checks if the line is a name of macro
+/** @brief Checks if the line is a macro name
  *
- * This fucntion checks to see if the given string is a name of a macro that is stored in the list of macro's
+ * This function checks whether the given string is the name of a macro that is stored in the macro list.
  * @param input_string line of text to check if is a macro name
- * @param macro_flag currernt macro status to update
- * @param list_of_macro the list of macro's
+ * @param macro_flag current macro status to update
+ * @param macro_list the list of macros
  * @return the macro node from the list that matches the text, else will return NULL.
  */
-MacroNode *is_line_name_of_macro(char *input_string, int *macro_flag, MacroList *list_of_macro);
+MacroNode *is_line_name_of_macro(char *input_string, int *macro_flag, MacroList *macro_list);
 
 
 /** @brief Checks if the name is valid name
