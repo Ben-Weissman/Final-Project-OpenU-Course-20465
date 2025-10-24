@@ -95,7 +95,7 @@ void machine_extra_code(char *operand, short adrs_method, Array *IC_arr, short c
                 }
             } else {
                 /* It's a target operand so activate bits 3 -> 5 accordingly*/
-                for (coded_word_i = 3; coded_word_i <= 6; coded_word_i++, current_var_i++) {
+                for (coded_word_i = 3; coded_word_i < 6; coded_word_i++, current_var_i++) {
                     if (IS_NTH_BIT_SET(op_val, current_var_i)) {
                         coded_word = SET_NTH_BIT(coded_word, coded_word_i);
                     }
@@ -119,7 +119,7 @@ void machine_extra_code(char *operand, short adrs_method, Array *IC_arr, short c
                 }
             } else {
                 /* It's a target operand so activate bits 3 -> 5 accordingly*/
-                for (coded_word_i = 3; coded_word_i <= 6; coded_word_i++, current_var_i++) {
+                for (coded_word_i = 3; coded_word_i < 6; coded_word_i++, current_var_i++) {
                     if (IS_NTH_BIT_SET(op_val, current_var_i)) {
                         coded_word = SET_NTH_BIT(coded_word, coded_word_i);
                     }

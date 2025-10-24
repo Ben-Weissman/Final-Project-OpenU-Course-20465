@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 
 #include "../headers/preprocessor.h"
@@ -150,21 +151,49 @@ void pre_proccesor(char *input_file_name, MacroList *macro_list, int *error_code
     /* Memory allocation */
     cur_line = malloc(MAX_LENGTH_LINE); /* Current line */
     cur_line_copy = malloc(MAX_LENGTH_LINE);
-    macro_name = malloc(MAX_MEMORY_MACRO_NAME);
-    macro_definition = malloc(MAX_LENGTH_LINE * MAX_LINES_MACRO_DEF);
-    new_file_name = malloc( strlen(input_file_name) + strlen(AM_FILE_ENDING));
-    input_file_as_ending = malloc (strlen(input_file_name) + strlen(AS_FILE_ENDING));
+    macro_name = calloc(MAX_MEMORY_MACRO_NAME, sizeof(char));
+    macro_definition = calloc(MAX_LENGTH_LINE * MAX_LINES_MACRO_DEF, sizeof(char));
+    new_file_name = malloc(strlen(input_file_name) + strlen(AM_FILE_ENDING) + 1);
+    input_file_as_ending = malloc(strlen(input_file_name) + strlen(AS_FILE_ENDING) + 1);
+
+    if (cur_line == NULL || cur_line_copy == NULL || macro_name == NULL || macro_definition == NULL || new_file_name == NULL ||
+        input_file_as_ending == NULL) {
+        free(cur_line);
+        free(cur_line_copy);
+        free(macro_name);
+        free(macro_definition);
+        free(new_file_name);
+        free(input_file_as_ending);
+        *error_code = INVALID_ACTION;
+        return;
+    }
 
     /* output file ending */
     strcpy(new_file_name,input_file_name);
     strcat(new_file_name, AM_FILE_ENDING); /* this wil create: ../io_files/filename.am */
 
     /* add .as ending to file name */
-    strcat(input_file_as_ending,input_file_name);
+    strcpy(input_file_as_ending, input_file_name);
     strcat(input_file_as_ending,AS_FILE_ENDING);
 
     input_file = open_file(input_file_as_ending, READ_MODE);
     output_file = open_file(new_file_name, APPEND_MODE);
+    if (input_file == NULL || output_file == NULL) {
+        free(cur_line);
+        free(cur_line_copy);
+        free(macro_name);
+        free(macro_definition);
+        free(new_file_name);
+        free(input_file_as_ending);
+        if (input_file != NULL) {
+            fclose(input_file);
+        }
+        if (output_file != NULL) {
+            fclose(output_file);
+        }
+        *error_code = INVALID_ACTION;
+        return;
+    }
 
     /* Read next line */
     while (fgets(cur_line, MAX_LENGTH_LINE, input_file) != NULL) {
@@ -177,40 +206,56 @@ void pre_proccesor(char *input_file_name, MacroList *macro_list, int *error_code
         /* Current line is start of macro -> read all lines of definition */
         if (macro_flag == IS_MACRO_START) {
             while (fgets(cur_line, MAX_LENGTH_LINE, input_file) != NULL) {
+                char *trimmed_copy;
+
                 /* Duplicate current line & remove trailling of \n */
                 strcpy(cur_line_copy, cur_line);
                 cur_line_copy[strcspn(cur_line_copy, DELIM_NEWLINE)] = 0;
 
                 /* Trim starting whitespace */
-                while (isspace(*cur_line_copy)) {
-                    cur_line_copy++;
+                trimmed_copy = cur_line_copy;
+                while (isspace((unsigned char) *trimmed_copy)) {
+                    trimmed_copy++;
                 }
 
                 /* Test if end of macro definition */
-                if (strncmp(cur_line_copy,MACRO_END, sizeof(MACRO_END)) == EQUAL) {
+                if (strncmp(trimmed_copy,MACRO_END, sizeof(MACRO_END)) == EQUAL) {
                     break; /* Exit reading macro definition */
                 }
 
                 /* Not the end of definition, add the current line to the definition  */
-                strcat(macro_definition, cur_line_copy);
+                strcat(macro_definition, trimmed_copy);
                 strcat(macro_definition, DELIM_NEWLINE);
             }
 
             /* Macro definition has been read, add it to the list */
             temp_macro_node = create_new_macro(macro_name, macro_definition);
+            if (temp_macro_node == NULL) {
+                free(cur_line);
+                free(cur_line_copy);
+                free(macro_name);
+                free(macro_definition);
+                free(new_file_name);
+                free(input_file_as_ending);
+                fclose(input_file);
+                fclose(output_file);
+                *error_code = INVALID_ACTION;
+                return;
+            }
             add_to_macro_list(macro_list, temp_macro_node);
 
             /* Reset strings */
-            memset(macro_name, 0, strlen(macro_name));
-            memset(macro_definition, 0, strlen(macro_definition));
+            memset(macro_name, 0, MAX_MEMORY_MACRO_NAME);
+            memset(macro_definition, 0, MAX_LENGTH_LINE * MAX_LINES_MACRO_DEF);
         }
         /* Current line is not start of macro */
         else if (macro_flag == MACRO_NAME_IS_CMD_NAME || macro_flag == MACRO_NAME_IS_INSTRUCTION_NAME || macro_flag ==
                  EXTRA_TEXT_AT_START_OF_MACRO) {
             /* Macro error was found */
+            free(cur_line);
+            free(cur_line_copy);
             free(macro_name);
             free(macro_definition);
-            free(cur_line);
             free(new_file_name);
             free(input_file_as_ending);
             fclose(input_file);
@@ -229,9 +274,10 @@ void pre_proccesor(char *input_file_name, MacroList *macro_list, int *error_code
                 /* Current line is NOT macro definition nor macro name */
 
                 /* Make a copy of the line & "clean" it of starting whitespace */
+                char *trimmed_line = cur_line_copy;
                 strcpy(cur_line_copy, cur_line);
-                while (isspace(*cur_line_copy)) {
-                    cur_line_copy++;
+                while (isspace((unsigned char) *trimmed_line)) {
+                    trimmed_line++;
                 }
                 /* Add the line to the file */
                 fprintf(output_file, "%s", cur_line);
@@ -242,6 +288,7 @@ void pre_proccesor(char *input_file_name, MacroList *macro_list, int *error_code
     free(macro_name);
     free(macro_definition);
     free(cur_line);
+    free(cur_line_copy);
     free(new_file_name);
     free(input_file_as_ending);
     fclose(input_file);

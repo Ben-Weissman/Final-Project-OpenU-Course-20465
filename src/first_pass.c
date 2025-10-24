@@ -22,8 +22,11 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
     ExtList *ext_list;
 
     /* Add .as file ending */
-    file_name_copy = malloc(strlen(name_of_file) + 10);
-    strcat(file_name_copy, name_of_file);
+    file_name_copy = malloc(strlen(name_of_file) + strlen(AM_FILE_ENDING) + 1);
+    if (file_name_copy == NULL) {
+        return;
+    }
+    strcpy(file_name_copy, name_of_file);
     strcat(file_name_copy, AM_FILE_ENDING);
     error_code = OFF;
     label_table = new_label_table();
@@ -31,8 +34,23 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
     ext_list = new_ext_list();
     DC_array = new_array(START_SIZE);
     IC_array = new_array(START_SIZE);
+    if (label_table == NULL || entries_table == NULL || ext_list == NULL || DC_array == NULL || IC_array == NULL) {
+        free_label_table(label_table);
+        free_label_table(entries_table);
+        free_ext_list(ext_list);
+        free_array(DC_array);
+        free_array(IC_array);
+        free(file_name_copy);
+        return;
+    }
     src_file = open_file(file_name_copy, READ_MODE);
     cur_line = malloc(MAX_LENGTH_LINE);
+    if (src_file == NULL || cur_line == NULL) {
+        free(cur_line);
+        free(file_name_copy);
+        end_cycle(src_file, IC_array, DC_array, label_table, entries_table, ext_list, NULL);
+        return;
+    }
 
     while (fgets(cur_line,MAX_LENGTH_LINE, src_file) != NULL) {
         error_code = OFF;
@@ -44,9 +62,11 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
         if (cur_word_type == IS_LABEL) {
             /* Test label name */
             label_name = duplicate_string(token);
-            if (is_label_name_valid(label_name, list_of_macro, label_table, &error_code) == FALSE) {
+            if (label_name == NULL ||
+                is_label_name_valid(label_name, list_of_macro, label_table, &error_code) == FALSE) {
                 handle_error(&error_code, line_number);
                 error_flag = ON;
+                free(label_name);
                 continue; /* to next line in file */
             }
 
@@ -63,6 +83,7 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
                         if (error_code != OFF) {
                             handle_error(&error_code, line_number);
                             error_flag = ON;
+                            free(label_name);
                             line_number++;
                             continue;
                         }
@@ -73,6 +94,7 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
                         if (error_code != OFF) {
                             handle_error(&error_code, line_number);
                             error_flag = ON;
+                            free(label_name);
                             line_number++;
                             continue;
                         }
@@ -86,9 +108,9 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
                         handle_dot_extern_case(token, label_table, ext_list, &error_code);
                         ext_flag = ON;
                         break;
-                    default: /* IS DOT EXTERN */
+                    default:
                         error_code = INVALID_ACTION;
-                        return;
+                        break;
                 }
             }
             /* Label -> command */
@@ -98,6 +120,7 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
                 if (error_code != OFF) {
                     handle_error(&error_code, line_number);
                     error_flag = ON;
+                    free(label_name);
                     line_number++;
                     continue;
                 }
@@ -105,6 +128,7 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
             } else {
                 error_code = INVALID_ACTION;
             }
+            free(label_name);
         }
 
         /* Instruction -> */
@@ -120,10 +144,12 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
                     ext_flag = ON;
                     handle_dot_extern_case(token, label_table, ext_list, &error_code);
                     break;
-                default:
-                    /* .entry */
+                case IS_DOT_ENTRY:
                     entries_flag = ON;
                     handle_dot_entry_case(token, entries_table, NIL, &error_code);
+                    break;
+                default:
+                    error_code = INVALID_ACTION;
                     break;
             }
         }
@@ -156,16 +182,25 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
                     &error_code);
     }
     end_cycle(src_file, IC_array, DC_array, label_table, entries_table, ext_list, cur_line);
+    free(file_name_copy);
 }
 
 void handle_dot_entry_case(char *string, LabelTable *table, short value, int *error_code) {
     string = strtok(NULL, DELIM_WHITESPACE);
+    if (string == NULL) {
+        *error_code = INVALID_ACTION;
+        return;
+    }
     remove_spaces(string);
     add_to_label_table(table, string, ENTRY, value, error_code);
 }
 
 void handle_dot_extern_case(char *string, LabelTable *label_table, ExtList *ext_list, int *error_code) {
     string = strtok(NULL, DELIM_WHITESPACE);
+    if (string == NULL) {
+        *error_code = INVALID_ACTION;
+        return;
+    }
     remove_spaces(string);
     add_to_label_table(label_table, string, EXTERNAL, NIL, error_code);
     add_to_ext_list(ext_list, string);

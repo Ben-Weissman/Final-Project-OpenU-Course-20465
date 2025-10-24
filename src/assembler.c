@@ -1,7 +1,7 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 
 #include "../headers/constants.h"
@@ -22,16 +22,25 @@ int main(int argc, char *argv[]) {
     /* Get next string in the command line */
     for (i = 1; i < argc; i++) {
         printf("Start proccess of file named:  %s\n",argv[i]);
-        src_file = malloc(strlen(argv[i])+10);
+        pre_proccesor_error_status = OFF;
+        src_file = malloc(strlen(argv[i]) + 1);
         list_of_macro = new_macro_list();
+        if (src_file == NULL || list_of_macro == NULL) {
+            free(src_file);
+            free_macro_list(list_of_macro);
+            fprintf(stderr, "Failed to allocate resources for file %s\n", argv[i]);
+            continue;
+        }
         strcpy(src_file, argv[i]);
         pre_proccesor(argv[i], list_of_macro, &pre_proccesor_error_status);
         if (pre_proccesor_error_status != OFF) {
+            free_macro_list(list_of_macro);
+            free(src_file);
             continue;
         }
         strcpy(src_file, argv[i]);
         first_pass(src_file, list_of_macro);
-        free(list_of_macro);
+        free_macro_list(list_of_macro);
         free(src_file);
         printf("End of proccess for file named:  %s\n",argv[i]);
     }

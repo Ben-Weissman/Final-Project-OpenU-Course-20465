@@ -37,6 +37,7 @@ typedef enum {
 #define DOT_STRING ".string"
 #define DOT_DATA ".data"
 #define DOT_EXTERN ".extern"
+#define DOT_ENTRY ".entry"
 
 /* File handling */
 #define APPEND_MODE "a"

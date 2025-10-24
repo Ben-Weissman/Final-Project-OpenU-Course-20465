@@ -75,6 +75,9 @@ char *get_macro_definition(MacroNode *node);
  */
 MacroList *new_macro_list();
 
+/** @brief Frees an entire macro list */
+void free_macro_list(MacroList *list);
+
 /** @brief Adds a given macro node to the macro list
  * This function adds a given macro node to the given macro list
  * @param list The list we want to add the macro node to.
@@ -101,6 +104,9 @@ MacroNode *create_new_macro(char *new_name, char *new_defenition);
  * @return a pointer to an empty label's list
  */
 LabelTable *new_label_table();
+
+/** @brief Frees a label table and all of its nodes */
+void free_label_table(LabelTable *table);
 
 /** @brief Add's a new label to the label's table
  * This function adds a label node to an exisiting label table
@@ -194,6 +200,9 @@ LabelNode *is_label_name_exists(char *label_name, LabelTable *label_table);
  * @return An Array pointer to the newly created object.
  */
 Array *new_array(unsigned short size);
+
+/** @brief Frees an Array structure and its owned memory */
+void free_array(Array *array);
 
 
 /** @brief Returns the current index of the array.
@@ -346,5 +355,8 @@ void print_to_file_ext_appearences(FILE *fp, ExtLabelNode *node);
  * @return The next node in the list
  */
 ExtLabelNode *get_next_ext_node(ExtLabelNode *node);
+
+/** @brief Frees an external labels list */
+void free_ext_list(ExtList *list);
 
 #endif /* DATA_STRUCTURES_H */

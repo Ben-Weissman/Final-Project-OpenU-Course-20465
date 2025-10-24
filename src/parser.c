@@ -42,16 +42,28 @@ short both_operands_are_registers(short src_op_adrs_method, short target_op_adrs
 short is_cmd_args_valid(short src_op_adrs_method, short target_op_adrs_method, int cmd_code, int *error_code) {
     switch (cmd_code) {
         case CMP:
+            if (src_op_adrs_method == UNUSED_OPERARND || target_op_adrs_method == UNUSED_OPERARND) {
+                *error_code = INVALID_AMOUNT_OF_OPERANDS;
+                return FALSE;
+            }
             return TRUE;
         case MOV:
         case ADD:
         case SUB:
+            if (src_op_adrs_method == UNUSED_OPERARND || target_op_adrs_method == UNUSED_OPERARND) {
+                *error_code = INVALID_AMOUNT_OF_OPERANDS;
+                return FALSE;
+            }
             if (target_op_adrs_method == IMMEDIATE_ADDRESSING) {
                 *error_code = INVALID_TARGET_ADDRESS_METHOD;
                 return FALSE;
             }
             return TRUE;
         case LEA:
+            if (src_op_adrs_method == UNUSED_OPERARND || target_op_adrs_method == UNUSED_OPERARND) {
+                *error_code = INVALID_AMOUNT_OF_OPERANDS;
+                return FALSE;
+            }
             if (target_op_adrs_method == IMMEDIATE_ADDRESSING) {
                 *error_code = INVALID_TARGET_ADDRESS_METHOD;
                 return FALSE;
@@ -66,6 +78,10 @@ short is_cmd_args_valid(short src_op_adrs_method, short target_op_adrs_method, i
         case INC:
         case DEC:
         case RED:
+            if (src_op_adrs_method == UNUSED_OPERARND) {
+                *error_code = INVALID_AMOUNT_OF_OPERANDS;
+                return FALSE;
+            }
             if (src_op_adrs_method == IMMEDIATE_ADDRESSING) {
                 *error_code = INVALID_TARGET_ADDRESS_METHOD;
                 return FALSE;
@@ -78,6 +94,10 @@ short is_cmd_args_valid(short src_op_adrs_method, short target_op_adrs_method, i
         case JMP:
         case BNE:
         case JSR:
+            if (src_op_adrs_method == UNUSED_OPERARND) {
+                *error_code = INVALID_AMOUNT_OF_OPERANDS;
+                return FALSE;
+            }
             if (target_op_adrs_method != UNUSED_OPERARND) {
                 *error_code = INVALID_AMOUNT_OF_OPERANDS;
                 return FALSE;
@@ -88,6 +108,10 @@ short is_cmd_args_valid(short src_op_adrs_method, short target_op_adrs_method, i
             }
             return TRUE;
         case PRN:
+            if (src_op_adrs_method == UNUSED_OPERARND) {
+                *error_code = INVALID_AMOUNT_OF_OPERANDS;
+                return FALSE;
+            }
             if (target_op_adrs_method != UNUSED_OPERARND) {
                 *error_code = INVALID_AMOUNT_OF_OPERANDS;
                 return FALSE;
@@ -109,19 +133,23 @@ short is_cmd_args_valid(short src_op_adrs_method, short target_op_adrs_method, i
 
 short get_instruction(char *string) {
     remove_spaces(string);
-    if (strcmp(string,DOT_STRING) == EQUAL) {
+    if (strcmp(string, DOT_STRING) == EQUAL) {
         /* string == .string */
         return IS_DOT_STRING;
-    } else if (strcmp(string,DOT_EXTERN) == EQUAL) {
+    }
+    if (strcmp(string, DOT_EXTERN) == EQUAL) {
         /* string == .extern */
         return IS_DOT_EXTERN;
-    } else if (strcmp(string,DOT_DATA) == EQUAL) {
-        /* string == .data.as */
+    }
+    if (strcmp(string, DOT_DATA) == EQUAL) {
+        /* string == .data */
         return IS_DOT_DATA;
-    } else {
+    }
+    if (strcmp(string, DOT_ENTRY) == EQUAL) {
         /* string == .entry */
         return IS_DOT_ENTRY;
     }
+    return UNDERFINED_TYPE;
 }
 
 
@@ -302,19 +330,22 @@ short *get_data(char *string_of_vals, int *error_code, int *parsed_data_arr_size
     char *token, *endptr;
 
     /* Allocate memory for data array */
-    parsed_data_arr = malloc(arr_size * sizeof(int));
+    parsed_data_arr = malloc(arr_size * sizeof(short));
     if (parsed_data_arr == NULL) {
         exit(EXIT_FAILURE);
     }
 
     /* Get first value and "clean" the string*/
     token = tokenize(string_of_vals,DELIM_COMMA);
-    remove_spaces(token);
+    if (token != NULL) {
+        remove_spaces(token);
+    }
 
     while (token != NULL) {
         if (is_empty(token)) {
             /* If token == "", then string was: "X,,X"*/
             *error_code = ILLEGAL_COMMA;
+            free(parsed_data_arr);
             return NULL;
         }
         /* Get intger value */
@@ -322,17 +353,19 @@ short *get_data(char *string_of_vals, int *error_code, int *parsed_data_arr_size
         /* Error converting the integer */
         if ((*endptr != NULL_TERMINATOR && *endptr != CHAR_NEWLINE) || endptr == token) {
             *error_code = INVALID_INT;
+            free(parsed_data_arr);
             return NULL;
         }
         /* Max value for 15 bit storage */
         if (converted_val > MAX_VALUE_15_BIT || converted_val < MIN_VALUE_15_BIT) {
             *error_code = INVALID_INT_RANGE;
+            free(parsed_data_arr);
             return NULL;
         }
         /* Increase array memory for more values */
         if (i >= arr_size) {
             arr_size += START_SIZE;
-            parsed_data_arr = realloc(parsed_data_arr, arr_size * sizeof(int));
+            parsed_data_arr = realloc(parsed_data_arr, arr_size * sizeof(short));
             if (parsed_data_arr == NULL) {
                 /* Allocation failed */
                 exit(EXIT_FAILURE);
@@ -343,7 +376,9 @@ short *get_data(char *string_of_vals, int *error_code, int *parsed_data_arr_size
         i++;
         /* Get next integer */
         token = tokenize(NULL,DELIM_COMMA);
-        remove_spaces(token);
+        if (token != NULL) {
+            remove_spaces(token);
+        }
     }
     *parsed_data_arr_size = i;
     return parsed_data_arr;

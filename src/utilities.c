@@ -60,8 +60,20 @@ void remove_spaces(char *string) {
 }
 
 char *duplicate_string(char *string) {
-    char *dup = malloc(sizeof(string) + 1); /* +1 to account for NULL terminator */
-    strncpy(dup, string, sizeof(string) + 1);
+    size_t len;
+    char *dup;
+
+    if (string == NULL) {
+        return NULL;
+    }
+
+    len = strlen(string);
+    dup = malloc(len + 1);
+    if (dup == NULL) {
+        return NULL;
+    }
+
+    memcpy(dup, string, len + 1);
     return dup;
 }
 
@@ -73,6 +85,11 @@ int get_next_word_type(char *string) {
 
 FILE *open_file(char *file_name, char *open_mode) {
     FILE *fp;
+
+    if (file_name == NULL || open_mode == NULL) {
+        return NULL;
+    }
+
     fp = fopen(file_name, open_mode);
     if (fp == NULL) {
         perror("Error");
@@ -123,11 +140,13 @@ void remove_ending_colon(char *string) {
 
 
 void end_cycle(FILE *fp, Array *IC, Array *DC, LabelTable *label, LabelTable *entries, ExtList *ext, char *line) {
-    fclose(fp);
-    free(IC);
-    free(DC);
-    free(label);
-    free(entries);
-    free(ext);
+    if (fp != NULL) {
+        fclose(fp);
+    }
+    free_array(IC);
+    free_array(DC);
+    free_label_table(label);
+    free_label_table(entries);
+    free_ext_list(ext);
     free(line);
 }
