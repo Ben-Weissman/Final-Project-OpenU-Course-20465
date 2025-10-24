@@ -18,7 +18,7 @@ void second_pass(Array *IC_array, Array *DC_array, LabelTable *label_table, Labe
     *error_code = OFF;
 
     /* look for NIL address in the IC array, if found update that location with correct label address */
-    for (i = 0; i <= IC_end; i++) {
+    for (i = 0; i < IC_end; i++) {
         IC_arr_val = get_IC_val(IC_array, i);
         label_name = get_IC_label(IC_array, i);
         if ((IC_arr_val == NIL) && (is_empty(label_name) == FALSE)) {
@@ -42,7 +42,14 @@ void second_pass(Array *IC_array, Array *DC_array, LabelTable *label_table, Labe
     /* There was .entry lines in the file -> create .ent file */
     if (ent_flag != OFF) {
         update_entries_table(label_table, ent_table, error_code);
-        build_entries_file(ent_table, file_name);
+        if (*error_code == OFF) {
+            build_entries_file(ent_table, file_name);
+        }
+    }
+
+    if (*error_code != OFF) {
+        handle_error(error_code, NIL);
+        return;
     }
 
     /* There was .extern lines in the file -> create .ext file */
@@ -55,8 +62,11 @@ void second_pass(Array *IC_array, Array *DC_array, LabelTable *label_table, Labe
     merged_arr_len = get_index_special_array(IC_array) + get_index_special_array(DC_array);
 
     /* Build the .obj file */
-    build_object_file(file_name, merged_array, get_index_special_array(IC_array), get_index_special_array(DC_array),
-                      merged_arr_len);
+    if (merged_array != NULL) {
+        build_object_file(file_name, merged_array, get_index_special_array(IC_array), get_index_special_array(DC_array),
+                          merged_arr_len);
+        free(merged_array);
+    }
 }
 
 
@@ -66,12 +76,19 @@ void build_entries_file(LabelTable *entries_table, char *name_of_file) {
     FILE *fp;
     LabelNode *temp;
     /* Create name of .ent file */
-    file = malloc(strlen(name_of_file) + strlen(ENTRY_FILE_ENDING));
-    strcat(file, name_of_file);
+    file = malloc(strlen(name_of_file) + strlen(ENTRY_FILE_ENDING) + 1);
+    if (file == NULL) {
+        return;
+    }
+    strcpy(file, name_of_file);
     strcat(file, ENTRY_FILE_ENDING);
 
     /* Open file */
     fp = open_file(file, APPEND_MODE);
+    if (fp == NULL) {
+        free(file);
+        return;
+    }
 
     /* Loop though the entries list and "print" each data to the file */
     temp = get_first_node(entries_table);
@@ -86,12 +103,19 @@ void build_entries_file(LabelTable *entries_table, char *name_of_file) {
 }
 
 void build_ext_file(ExtList *ext_list, char *name_of_file) {
-    char *file = malloc(strlen(name_of_file) + strlen(EXTERNAL_FILE_ENDING));
+    char *file = malloc(strlen(name_of_file) + strlen(EXTERNAL_FILE_ENDING) + 1);
     FILE *fp;
     ExtLabelNode *ext_node;
-    strcat(file, name_of_file);
+    if (file == NULL) {
+        return;
+    }
+    strcpy(file, name_of_file);
     strcat(file, EXTERNAL_FILE_ENDING);
     fp = open_file(file, APPEND_MODE);
+    if (fp == NULL) {
+        free(file);
+        return;
+    }
     ext_node = get_ext_list_head(ext_list);
     while (ext_node != NULL) {
         print_to_file_ext_appearences(fp, ext_node);
@@ -104,13 +128,20 @@ void build_ext_file(ExtList *ext_list, char *name_of_file) {
 void build_object_file(char *name_of_file, short *arr, short IC, short DC, short len) {
     int i;
     unsigned short val, mask, result;
-    char *file = malloc(strlen(name_of_file) + strlen(OBJECT_FILE_ENDING));
+    char *file = malloc(strlen(name_of_file) + strlen(OBJECT_FILE_ENDING) + 1);
     FILE *fp;
     mask = 0x7FFF; /* Used for octal representation */
     /* create object file name */
-    strcat(file, name_of_file);
+    if (file == NULL) {
+        return;
+    }
+    strcpy(file, name_of_file);
     strcat(file, OBJECT_FILE_ENDING);
     fp = open_file(file, APPEND_MODE);
+    if (fp == NULL) {
+        free(file);
+        return;
+    }
 
     /* Header of file */
     fprintf(fp, "  %d %d\n", IC, DC);

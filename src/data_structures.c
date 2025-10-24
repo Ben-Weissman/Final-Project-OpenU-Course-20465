@@ -69,9 +69,27 @@ char *get_macro_definition(MacroNode *node) {
 }
 
 MacroList *new_macro_list() {
-    MacroList *list = malloc(sizeof(MacroList));
-    list->head = NULL;
+    MacroList *list = calloc(1, sizeof(MacroList));
     return list;
+}
+
+void free_macro_list(MacroList *list) {
+    MacroNode *node, *next;
+
+    if (list == NULL) {
+        return;
+    }
+
+    node = list->head;
+    while (node != NULL) {
+        next = node->next;
+        free(node->macro_name);
+        free(node->macro_def);
+        free(node);
+        node = next;
+    }
+
+    free(list);
 }
 
 void add_to_macro_list(MacroList *list, MacroNode *node) {
@@ -100,6 +118,8 @@ MacroNode *create_new_macro(char *new_name, char *new_defenition) {
 
     /* memory allocation failed */
     if (new_node->macro_name == NULL || new_node->macro_def == NULL) {
+        free(new_node->macro_name);
+        free(new_node->macro_def);
         free(new_node);
         return NULL;
     }
@@ -116,8 +136,26 @@ MacroNode *create_new_macro(char *new_name, char *new_defenition) {
 /* LABEL SECTION */
 
 LabelTable *new_label_table() {
-    LabelTable *head = malloc(sizeof(LabelTable));
+    LabelTable *head = calloc(1, sizeof(LabelTable));
     return head;
+}
+
+void free_label_table(LabelTable *table) {
+    LabelNode *node, *next;
+
+    if (table == NULL) {
+        return;
+    }
+
+    node = table->head;
+    while (node != NULL) {
+        next = node->next;
+        free(node->label_name);
+        free(node);
+        node = next;
+    }
+
+    free(table);
 }
 
 void add_to_label_table(LabelTable *table, char *label_name, int location, int value, int *error_code) {
@@ -128,6 +166,10 @@ void add_to_label_table(LabelTable *table, char *label_name, int location, int v
         return;
     }
     node = new_label_node(node, label_name, value, location);
+    if (node == NULL) {
+        *error_code = INVALID_ACTION;
+        return;
+    }
     /* list is empty */
     if (table->head == NULL) {
         table->head = node;
@@ -233,12 +275,14 @@ LabelNode *is_label_name_exists(char *label_name, LabelTable *label_table) {
         result = strcmp(label_name_copy, temp->label_name);
         /* found a label in the list that is same as the input name */
         if (result == EQUAL) {
+            free(label_name_copy);
             return temp;
         }
         /* advance in the list */
         temp = temp->next;
     }
     /* no match was found in the table */
+    free(label_name_copy);
     return NULL;
 }
 
@@ -247,13 +291,43 @@ LabelNode *is_label_name_exists(char *label_name, LabelTable *label_table) {
 /* ARRAY SECTION */
 
 Array *new_array(unsigned short size) {
-    Array *array = malloc(sizeof(Array));
+    Array *array = calloc(1, sizeof(Array));
+
+    if (array == NULL) {
+        return NULL;
+    }
+
     array->size = size;
-    array->data = malloc(size * sizeof(short));
-    array->label_name_arr = (char **) malloc(size * sizeof(char *));
-    memset(array->data, 0, size);
+    array->data = calloc(size, sizeof(short));
+    array->label_name_arr = calloc(size, sizeof(char *));
     array->i = 0;
+
+    if (array->data == NULL || array->label_name_arr == NULL) {
+        free(array->data);
+        free(array->label_name_arr);
+        free(array);
+        return NULL;
+    }
+
     return array;
+}
+
+void free_array(Array *array) {
+    unsigned short index;
+
+    if (array == NULL) {
+        return;
+    }
+
+    if (array->label_name_arr != NULL) {
+        for (index = 0; index < array->size; index++) {
+            free(array->label_name_arr[index]);
+        }
+        free(array->label_name_arr);
+    }
+
+    free(array->data);
+    free(array);
 }
 
 int get_index_special_array(Array *arr) {
@@ -273,6 +347,8 @@ void insert_to_IC_array(Array *IC_arr, short value, char *label_name) {
     index = IC_arr->i;
     if (label_name != NULL) {
         IC_arr->label_name_arr[index] = duplicate_string(label_name);
+    } else {
+        IC_arr->label_name_arr[index] = NULL;
     }
     IC_arr->data[index] = value;
     index++;
@@ -305,6 +381,10 @@ short *merge_array(Array *IC_arr, Array *DC_arr) {
     short DC = get_index_special_array(DC_arr);
     int i, j;
     short *merg_arr = malloc((IC + DC) * sizeof(short));
+
+    if (merg_arr == NULL) {
+        return NULL;
+    }
     for (i = 0; i < IC; i++) {
         merg_arr[i] = get_IC_val(IC_arr, i);
     }
@@ -340,20 +420,29 @@ void update_entries_table(LabelTable *label_table, LabelTable *entries_table, in
 /* EXTERNALS SECTION */
 
 ExtList *new_ext_list() {
-    ExtList *list = malloc(sizeof(ExtList));
-    list->head = NULL;
+    ExtList *list = calloc(1, sizeof(ExtList));
     return list;
 }
 
 ExtLabelNode *new_ext_label_node(char *new_name) {
     ExtLabelNode *new_node = malloc(sizeof(ExtLabelNode));
 
+    if (new_node == NULL) {
+        return NULL;
+    }
+
     /* Allocate Memory */
     new_node->name = malloc(strlen(new_name) + 1);
-    new_node->appearance_addresses = malloc(MAX_APPEARANCES * sizeof(short));
+    new_node->appearance_addresses = calloc(MAX_APPEARANCES, sizeof(short));
+
+    if (new_node->name == NULL || new_node->appearance_addresses == NULL) {
+        free(new_node->name);
+        free(new_node->appearance_addresses);
+        free(new_node);
+        return NULL;
+    }
 
     /* Zero out appearances & set next node  */
-    memset(new_node->appearance_addresses, NIL, MAX_APPEARANCES);
     new_node->next = NULL;
 
     /* Assign name */
@@ -364,6 +453,9 @@ ExtLabelNode *new_ext_label_node(char *new_name) {
 
 void add_to_ext_list(ExtList *list, char *name_of_node) {
     ExtLabelNode *node = new_ext_label_node(name_of_node);
+    if (node == NULL || list == NULL) {
+        return;
+    }
     /* List is empty */
     if (list->head == NULL) {
         list->head = node;
@@ -390,7 +482,7 @@ void add_ext_appearence(ExtList *list, char *node_name, short address) {
         /* No node was found with the given name */
         return;
     }
-    for (i = 0; i <= MAX_APPEARANCES; i++) {
+    for (i = 0; i < MAX_APPEARANCES; i++) {
         if (temp->appearance_addresses[i] == NIL) {
             temp->appearance_addresses[i] = address;
             return;
@@ -419,4 +511,23 @@ void print_to_file_ext_appearences(FILE *fp, ExtLabelNode *node) {
 
 ExtLabelNode *get_next_ext_node(ExtLabelNode *node) {
     return (node != NULL) ? node->next : NULL;
+}
+
+void free_ext_list(ExtList *list) {
+    ExtLabelNode *node, *next;
+
+    if (list == NULL) {
+        return;
+    }
+
+    node = list->head;
+    while (node != NULL) {
+        next = node->next;
+        free(node->name);
+        free(node->appearance_addresses);
+        free(node);
+        node = next;
+    }
+
+    free(list);
 }
