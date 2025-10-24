@@ -11,7 +11,7 @@
 #include "../headers/second_pass.h"
 #include "../headers/utilities.h"
 
-void first_pass(char *name_of_file, MacroList *list_of_macro) {
+void first_pass(char *name_of_file, MacroList *macro_list) {
     int line_number = 1, label_value, cur_word_type, error_code, error_flag = OFF;
     int entries_flag = OFF, ext_flag = OFF;
     char *cur_line, *token, *label_name, *file_name_copy;
@@ -63,7 +63,7 @@ void first_pass(char *name_of_file, MacroList *list_of_macro) {
             /* Test label name */
             label_name = duplicate_string(token);
             if (label_name == NULL ||
-                is_label_name_valid(label_name, list_of_macro, label_table, &error_code) == FALSE) {
+                is_label_name_valid(label_name, macro_list, label_table, &error_code) == FALSE) {
                 handle_error(&error_code, line_number);
                 error_flag = ON;
                 free(label_name);

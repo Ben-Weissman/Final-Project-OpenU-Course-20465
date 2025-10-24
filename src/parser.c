@@ -260,7 +260,7 @@ short get_adrs_method(char *token, int *error_code) {
     return DIRECT_MEMORY_ADDRESSING;
 }
 
-short is_label_name_valid(char *string, MacroList *list_of_macro, LabelTable *label_table,
+short is_label_name_valid(char *string, MacroList *macro_list, LabelTable *label_table,
                           int *error_code) {
     int i, macro_flag = IS_NOT_MACRO_NAME;
     MacroNode *temp_macro;
@@ -308,7 +308,7 @@ short is_label_name_valid(char *string, MacroList *list_of_macro, LabelTable *la
     }
 
     /* Test for existing macro name */
-    temp_macro = is_line_name_of_macro(string, &macro_flag, list_of_macro);
+    temp_macro = is_line_name_of_macro(string, &macro_flag, macro_list);
     if (temp_macro != NULL) {
         *error_code = LABEL_NAME_IS_MACRO_NAME;
         return FALSE;

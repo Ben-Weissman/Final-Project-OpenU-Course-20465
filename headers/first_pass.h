@@ -9,11 +9,11 @@
 /** @brief First pass of assembler
  * This is the first pass of the assembler.
  * The function first understands what the syntax/format of the line is (i.e comment line, instruction line, command line etc..)
- * and then sends the appropriate data to the case functions to handle further proccesing.
+ * and then sends the appropriate data to the case functions to handle further processing.
  * @param name_of_file The name of the current file to read
- * @param list_of_macro The list of macro's from the pre-processor phase.
+ * @param macro_list The list of macros from the preprocessor phase.
  */
-void first_pass(char *name_of_file, MacroList *list_of_macro);
+void first_pass(char *name_of_file, MacroList *macro_list);
 
 
 /** @brief Case handling for .extern line

@@ -67,12 +67,12 @@ short get_adrs_method(char *token, int *error_code);
 /** @brief Test's if the label name is valid
  * This function test's to see if the given label name is valid according to the assignment rules.
  * @param string Containing the name of the label
- * @param list_of_macro This file macro list
+ * @param macro_list Macro list collected during preprocessing
  * @param label_table Label table
  * @param error_code Error code for error checking
  * @return TRUE(1) if valid label name, FALSE(0) otherwise.
  */
-short is_label_name_valid(char *string, MacroList *list_of_macro, LabelTable *label_table, int *error_code);
+short is_label_name_valid(char *string, MacroList *macro_list, LabelTable *label_table, int *error_code);
 
 
 /** @brief Returns an array with parsed data.as
