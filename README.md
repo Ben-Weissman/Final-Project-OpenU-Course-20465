@@ -2,6 +2,8 @@
 
 A compact ANSI C90 implementation of a macro-aware, two-pass assembler for a small teaching architecture. The tool expands user macros, records symbols during the first pass, resolves addresses in the second pass, and finally emits object, entry, and extern listings.
 
+Note: After completing the course, I revisited this project using AI-assisted code review and debugging tools to refactor, document, and enhance overall code quality and maintainability.
+
 ## Build
 - Prerequisites: `gcc`, `make`, and a POSIX-like shell.
 - Build the executable with strict warnings enabled:
